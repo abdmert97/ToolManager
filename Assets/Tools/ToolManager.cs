@@ -35,14 +35,6 @@ namespace Tools
             return obj;
         }
 
-        public T GetToolComponent<T>(GameObject gameObject) where T : Component
-        {
-            Type type = typeof(T);
-            Component neededClass = FindScript(type);
-            T obj =  gameObject.AddComponent<T>(); 
-            return obj;
-        }
-
         private Component FindScript(Type type)
           {
               if (type == BoundType)
