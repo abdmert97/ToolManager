@@ -12,14 +12,21 @@ namespace Tools
 		public float distance;
 		public float focusRadius;
 		public float cameraSpeed;
-		[Tooltip("When target objects rotation changes camera will also rotates")]
+		[Tooltip("When target objects rotation changes camera will also rotates")]	[HideInInspector]
 		public bool relativeRotation; 
-		public bool cullObjectFrontofTarget; 
+		[HideInInspector]
+		public bool cullObjectFrontofTarget;
+		
+		public bool lerpAngle = false;
+		public Vector3 defaultRotation;
+		[Range(0,255)][HideInInspector]
+		public int transparency = 128;
 		private Vector3 _lookDistance;
 		private Vector3 _focusPoint;
 		private Vector3 _lastFocusPoint;
 		private float _time = 0;
-		public Material transparent = null;
+		[HideInInspector]
+		public Material transparentMaterial = null;
 		private List<Renderer> _disabledRenderers = new List<Renderer>();
 		private List<Material> _disabledMaterials = new List<Material>();
 
@@ -28,12 +35,11 @@ namespace Tools
 
 		private void Awake()
 		{
-			if(transparent == null)
+			if(transparentMaterial == null)
 			{
-				transparent = new Material(Shader.Find("Transparent/Diffuse"));
-				transparent.color = new Color32(255, 255, 255, 128);
+				transparentMaterial = new Material(Shader.Find("Transparent/Diffuse"));
+				transparentMaterial.color = new Color32(255, 255, 255, (byte)transparency);
 			}
-
 		}
 
 		private void Start()
@@ -73,7 +79,7 @@ namespace Tools
 						_disabledRenderers.Add(renderer);
 						_disabledMaterials.Add(renderer.sharedMaterial);
 					}
-					renderer.sharedMaterial = transparent;
+					renderer.sharedMaterial = transparentMaterial;
 				}
 				else
 				{
@@ -105,10 +111,13 @@ namespace Tools
 		private void UpdateTransform()
 		{
 			_time = Time.deltaTime;
-		
+			
 			transform.position = Vector3.Lerp(transform.position,_lastFocusPoint+_lookDistance,_time*cameraSpeed);
+			Vector3 rotation = defaultRotation + Vector3.right * angle;
 			if(!relativeRotation)
-				transform.rotation = Quaternion.Euler(angle, 0, 0);
+			{
+				transform.rotation = !lerpAngle ? Quaternion.Euler(rotation) : Quaternion.Slerp(transform.rotation, Quaternion.Euler(rotation), _time * cameraSpeed);
+			}
 			else
 			{
 			
@@ -116,12 +125,13 @@ namespace Tools
 				{
 					hitNormal = hit.normal;
 					float normalAngle = 90-Mathf.Rad2Deg * Mathf.Atan2(hitNormal.y, hit.normal.z);
-					transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(angle+normalAngle, 0, 0),_time*cameraSpeed); 
+					rotation += normalAngle * Vector3.right;
+					transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(rotation),_time*cameraSpeed); 
 				
 				}
 				else
 				{
-					transform.rotation = Quaternion.Euler(angle, 0, 0);
+					transform.rotation =  Quaternion.Slerp(transform.rotation, Quaternion.Euler(rotation),_time*cameraSpeed); 
 				}
 			}
 		}
@@ -136,8 +146,9 @@ namespace Tools
 			Gizmos.color = Color.red;
 
 			Gizmos.DrawSphere(_lastFocusPoint,.1f);
-		
-			Gizmos.DrawLine(target.position,target.position+hitNormal*5);
+
+			var position = target.position;
+			Gizmos.DrawLine(position,position+hitNormal*5);
 
 		}
 	}
