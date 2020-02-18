@@ -13,26 +13,30 @@ namespace Tools
 		public float focusRadius;
 		public float cameraSpeed;
 		[Tooltip("When target objects rotation changes camera will also rotates")]	[HideInInspector]
-		public bool relativeRotation; 
+		public bool relativeRotation;
+		public Vector3 defaultRotation;
+		public bool lookAlwaysTarget;
+		public bool lerpAngle = false;
+		
 		[HideInInspector]
 		public bool cullObjectFrontofTarget;
-		
-		public bool lerpAngle = false;
-		public Vector3 defaultRotation;
 		[Range(0,255)][HideInInspector]
 		public int transparency = 128;
+		[HideInInspector]
+		public Material transparentMaterial = null;
+
+		public bool fixedCamera;
+		public bool autoCameraSpeed;
+		public bool stopCamera = false;
 		private Vector3 _lookDistance;
 		private Vector3 _focusPoint;
 		private Vector3 _lastFocusPoint;
 		private float _time = 0;
-		[HideInInspector]
-		public Material transparentMaterial = null;
 		private List<Renderer> _disabledRenderers = new List<Renderer>();
 		private List<Material> _disabledMaterials = new List<Material>();
-
 		private Vector3 hitNormal;
-
-
+		private Camera _camera;
+		private float defaultCameraSpeed;
 		private void Awake()
 		{
 			if(transparentMaterial == null)
@@ -44,27 +48,40 @@ namespace Tools
 
 		private void Start()
 		{
-		
+			defaultCameraSpeed = cameraSpeed;
 			var position = target.position;
 			_focusPoint = position;
 			_lastFocusPoint = position;
 			transform.position = position + _lookDistance;
 			_lookDistance = new Vector3(0,distance*Mathf.Sin(angle*Mathf.Deg2Rad),-1*distance*Mathf.Cos(angle*Mathf.Deg2Rad));
+			_camera = Camera.main;
+			
+		
 		}
 
-	
+		
 		private void OnValidate()
 		{
-			_lookDistance = new Vector3(0,distance*Mathf.Sin(angle*Mathf.Deg2Rad),-1*distance*Mathf.Cos(angle*Mathf.Deg2Rad));
+			if(!lookAlwaysTarget)
+				_lookDistance = new Vector3(0,distance*Mathf.Sin(angle*Mathf.Deg2Rad),-1*distance*Mathf.Cos(angle*Mathf.Deg2Rad));
+			else
+			{
+				Vector3 rotation = Vector3.right * angle + defaultRotation;
+				
+				_lookDistance = new Vector3(0,distance*Mathf.Sin(angle*Mathf.Deg2Rad),-1*distance*Mathf.Cos(angle*Mathf.Deg2Rad));
+			}
 			distance = distance < 0 ? 0 : distance;
 		}
 	
 		private void LateUpdate()
 		{
+			if (stopCamera) return;
 			UpdateFocusPoint();
 			UpdateTransform();
 			if(cullObjectFrontofTarget)
 				CheckVisibility();
+			
+			
 		}
 
 		private void CheckVisibility()
@@ -97,14 +114,15 @@ namespace Tools
 		private void UpdateFocusPoint()
 		{
 			_focusPoint = target.position;
+		
 			float distance = Vector3.Distance(_focusPoint, _lastFocusPoint);
 			if ( distance>= focusRadius)
 			{
-				_lastFocusPoint = Vector3.Lerp(_lastFocusPoint, _focusPoint, focusRadius / distance);
+				_lastFocusPoint = _focusPoint;
 			}
 			else
 			{
-				_lastFocusPoint = Vector3.Lerp(_focusPoint, _focusPoint, Time.unscaledDeltaTime);
+			//	_lastFocusPoint = Vector3.Lerp(_focusPoint, _focusPoint, Time.unscaledDeltaTime);
 			}
 		}
 
@@ -112,31 +130,64 @@ namespace Tools
 		{
 			_time = Time.deltaTime;
 			
-			transform.position = Vector3.Lerp(transform.position,_lastFocusPoint+_lookDistance,_time*cameraSpeed);
-			Vector3 rotation = defaultRotation + Vector3.right * angle;
-			if(!relativeRotation)
+			UpdatePosition();
+			
+			UpdateRotation();
+		}
+
+		private void UpdatePosition()
+		{
+			if (autoCameraSpeed)
 			{
-				transform.rotation = !lerpAngle ? Quaternion.Euler(rotation) : Quaternion.Slerp(transform.rotation, Quaternion.Euler(rotation), _time * cameraSpeed);
+				
+			   Vector2 isVisible =	_camera.WorldToViewportPoint(target.position);
+			  
+			   if (isVisible.x> 0.75f || isVisible.y > 0.75f ||isVisible.x< 0.25f || isVisible.y < 0.25f)
+			   {
+				   cameraSpeed += Time.deltaTime;
+			   }
+			   else
+			   {
+				  // cameraSpeed = defaultCameraSpeed;
+			   }
+			}
+			
+			Vector3 distance = _lastFocusPoint + _lookDistance - transform.position;
+			if (!fixedCamera)
+			{
+				distance = distance * cameraSpeed*Time.deltaTime;
+			}
+			
+			//transform.position = Vector3.Lerp(transform.position, _lastFocusPoint + _lookDistance, _time * cameraSpeed);
+			transform.position += distance;
+		}
+
+		private void UpdateRotation()
+		{
+			Vector3 rotation = defaultRotation + Vector3.right * angle;
+			if (!relativeRotation)
+			{
+				transform.rotation = !lerpAngle
+					? Quaternion.Euler(rotation)
+					: Quaternion.Slerp(transform.rotation, Quaternion.Euler(rotation), _time * cameraSpeed);
 			}
 			else
 			{
-			
-				if (Physics.Raycast(transform.position - _lookDistance, Vector3.down,out var hit))
+				if (Physics.Raycast(transform.position - _lookDistance, Vector3.down, out var hit))
 				{
 					hitNormal = hit.normal;
-					float normalAngle = 90-Mathf.Rad2Deg * Mathf.Atan2(hitNormal.y, hit.normal.z);
+					float normalAngle = 90 - Mathf.Rad2Deg * Mathf.Atan2(hitNormal.y, hit.normal.z);
 					rotation += normalAngle * Vector3.right;
-					transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(rotation),_time*cameraSpeed); 
-				
+					transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(rotation), _time * cameraSpeed);
 				}
 				else
 				{
-					transform.rotation =  Quaternion.Slerp(transform.rotation, Quaternion.Euler(rotation),_time*cameraSpeed); 
+					transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(rotation), _time * cameraSpeed);
 				}
 			}
 		}
 
-	
+
 		private void OnDrawGizmos()
 		{
 			Gizmos.color = Color.blue;
