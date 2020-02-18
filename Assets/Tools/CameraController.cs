@@ -1,4 +1,5 @@
-﻿using Boo.Lang;
+﻿using System;
+using Boo.Lang;
 using UnityEngine;
 
 namespace Tools
@@ -15,8 +16,7 @@ namespace Tools
 		[Tooltip("When target objects rotation changes camera will also rotates")]	[HideInInspector]
 		public bool relativeRotation;
 		public Vector3 defaultRotation;
-		public bool lookAlwaysTarget;
-		public bool lerpAngle = false;
+		
 		
 		[HideInInspector]
 		public bool cullObjectFrontofTarget;
@@ -24,19 +24,26 @@ namespace Tools
 		public int transparency = 128;
 		[HideInInspector]
 		public Material transparentMaterial = null;
-
-		public bool fixedCamera;
-		public bool autoCameraSpeed;
+		[HideInInspector]
+		public bool fixedCamera = false;
+		[HideInInspector]
+		public bool autoCameraSpeed = false;
+		[HideInInspector]
 		public bool stopCamera = false;
+		[HideInInspector]
+		public bool lookAlwaysTarget;
+		[HideInInspector]
+		public bool lerpAngle = false;
+		
 		private Vector3 _lookDistance;
 		private Vector3 _focusPoint;
 		private Vector3 _lastFocusPoint;
 		private float _time = 0;
 		private List<Renderer> _disabledRenderers = new List<Renderer>();
 		private List<Material> _disabledMaterials = new List<Material>();
-		private Vector3 hitNormal;
+		private Vector3 _hitNormal;
 		private Camera _camera;
-		private float defaultCameraSpeed;
+		private float _defaultCameraSpeed;
 		private void Awake()
 		{
 			if(transparentMaterial == null)
@@ -48,7 +55,7 @@ namespace Tools
 
 		private void Start()
 		{
-			defaultCameraSpeed = cameraSpeed;
+			_defaultCameraSpeed = cameraSpeed;
 			var position = target.position;
 			_focusPoint = position;
 			_lastFocusPoint = position;
@@ -78,10 +85,15 @@ namespace Tools
 			if (stopCamera) return;
 			UpdateFocusPoint();
 			UpdateTransform();
+			
+			
+			
+		}
+
+		private void FixedUpdate()
+		{
 			if(cullObjectFrontofTarget)
 				CheckVisibility();
-			
-			
 		}
 
 		private void CheckVisibility()
@@ -93,6 +105,7 @@ namespace Tools
 					Renderer renderer = hit.transform.GetComponent<Renderer>();
 					if (!_disabledRenderers.Contains(renderer))
 					{
+					
 						_disabledRenderers.Add(renderer);
 						_disabledMaterials.Add(renderer.sharedMaterial);
 					}
@@ -122,7 +135,7 @@ namespace Tools
 			}
 			else
 			{
-			//	_lastFocusPoint = Vector3.Lerp(_focusPoint, _focusPoint, Time.unscaledDeltaTime);
+				//	_lastFocusPoint = Vector3.Lerp(_focusPoint, _focusPoint, Time.unscaledDeltaTime);
 			}
 		}
 
@@ -175,8 +188,8 @@ namespace Tools
 			{
 				if (Physics.Raycast(transform.position - _lookDistance, Vector3.down, out var hit))
 				{
-					hitNormal = hit.normal;
-					float normalAngle = 90 - Mathf.Rad2Deg * Mathf.Atan2(hitNormal.y, hit.normal.z);
+					_hitNormal = hit.normal;
+					float normalAngle = 90 - Mathf.Rad2Deg * Mathf.Atan2(_hitNormal.y, hit.normal.z);
 					rotation += normalAngle * Vector3.right;
 					transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(rotation), _time * cameraSpeed);
 				}
@@ -199,7 +212,7 @@ namespace Tools
 			Gizmos.DrawSphere(_lastFocusPoint,.1f);
 
 			var position = target.position;
-			Gizmos.DrawLine(position,position+hitNormal*5);
+			Gizmos.DrawLine(position,position+_hitNormal*5);
 
 		}
 	}

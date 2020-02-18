@@ -28,7 +28,14 @@ namespace Editor
                         EditorGUILayout.IntSlider("Transparency", cameraController.transparency,0,255);
                     cameraController.transparentMaterial = EditorGUILayout.ObjectField("Transparent Material",
                         cameraController.transparentMaterial, typeof(Material)) as Material;
-                }    
+                }  
+                
+                cameraController.fixedCamera = EditorGUILayout.Toggle("Fixed Camera", cameraController.fixedCamera);
+                cameraController.autoCameraSpeed = EditorGUILayout.Toggle("Auto camera speed", cameraController.autoCameraSpeed);
+                cameraController.stopCamera = EditorGUILayout.Toggle("Stop Camera", cameraController.stopCamera);
+                cameraController.lookAlwaysTarget = EditorGUILayout.Toggle("Look always camera", cameraController.lookAlwaysTarget);
+                cameraController.lerpAngle = EditorGUILayout.Toggle("Lerp Angle", cameraController.lerpAngle);
+                
             }
             
         }
