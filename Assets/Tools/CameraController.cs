@@ -1,6 +1,6 @@
-﻿using System;
-using Boo.Lang;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Tools
 {
@@ -16,8 +16,8 @@ namespace Tools
 		[Tooltip("When target objects rotation changes camera will also rotates")]	[HideInInspector]
 		public bool relativeRotation;
 		public Vector3 defaultRotation;
-		
-		
+
+		public Text text;
 		[HideInInspector]
 		public bool cullObjectFrontofTarget;
 		[Range(0,255)][HideInInspector]
@@ -48,8 +48,9 @@ namespace Tools
 		{
 			if(transparentMaterial == null)
 			{
-				transparentMaterial = new Material(Shader.Find("Transparent/Diffuse"));
-				transparentMaterial.color = new Color32(255, 255, 255, (byte)transparency);
+				cullObjectFrontofTarget = false;
+				//transparentMaterial = new Material(Shader.Find("Transparent/Diffuse"));
+				//transparentMaterial.color = new Color32(255, 255, 255, (byte)transparency);
 			}
 		}
 
@@ -62,8 +63,7 @@ namespace Tools
 			transform.position = position + _lookDistance;
 			_lookDistance = new Vector3(0,distance*Mathf.Sin(angle*Mathf.Deg2Rad),-1*distance*Mathf.Cos(angle*Mathf.Deg2Rad));
 			_camera = Camera.main;
-			
-		
+			text.text = target.name;
 		}
 
 		
@@ -85,9 +85,6 @@ namespace Tools
 			if (stopCamera) return;
 			UpdateFocusPoint();
 			UpdateTransform();
-			
-			
-			
 		}
 
 		private void FixedUpdate()
@@ -105,7 +102,6 @@ namespace Tools
 					Renderer renderer = hit.transform.GetComponent<Renderer>();
 					if (!_disabledRenderers.Contains(renderer))
 					{
-					
 						_disabledRenderers.Add(renderer);
 						_disabledMaterials.Add(renderer.sharedMaterial);
 					}
@@ -152,17 +148,16 @@ namespace Tools
 		{
 			if (autoCameraSpeed)
 			{
-				
-			   Vector2 isVisible =	_camera.WorldToViewportPoint(target.position);
+				Vector2 isVisible =	_camera.WorldToViewportPoint(target.position);
 			  
-			   if (isVisible.x> 0.75f || isVisible.y > 0.75f ||isVisible.x< 0.25f || isVisible.y < 0.25f)
-			   {
-				   cameraSpeed += Time.deltaTime;
-			   }
-			   else
-			   {
-				  // cameraSpeed = defaultCameraSpeed;
-			   }
+				if (isVisible.x> 0.75f || isVisible.y > 0.75f ||isVisible.x< 0.25f || isVisible.y < 0.25f)
+				{
+					cameraSpeed += Time.deltaTime;
+				}
+				else
+				{
+					// cameraSpeed = defaultCameraSpeed;
+				}
 			}
 			
 			Vector3 distance = _lastFocusPoint + _lookDistance - transform.position;
