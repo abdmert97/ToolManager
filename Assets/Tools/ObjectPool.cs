@@ -49,6 +49,7 @@ namespace Tools
         public void SendToPool(GameObject obj,bool resetTransform = true)
         {
             obj.SetActive(false);
+            _pool.Push(obj);
             obj.transform.SetParent(_poolParent);
             if (!resetTransform) return;
             obj.transform.localPosition = Vector3.zero;
