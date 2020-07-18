@@ -1,10 +1,10 @@
 ﻿#if UNITY_EDITOR
 using UnityEditor;
-#endif
+
 using UnityEngine;
 using System.Collections;
 using Tools;
-#if UNITY_EDITOR
+
 namespace Editor
 {
     [CustomEditor(typeof(CameraController))]
@@ -27,13 +27,13 @@ namespace Editor
                     cameraController.transparency =
                         EditorGUILayout.IntSlider("Transparency", cameraController.transparency,0,255);
                     cameraController.transparentMaterial = EditorGUILayout.ObjectField("Transparent Material",
-                        cameraController.transparentMaterial, typeof(Material)) as Material;
+                        cameraController.transparentMaterial, typeof(Material),true) as Material;
                 }  
                 
                 cameraController.fixedCamera = EditorGUILayout.Toggle("Fixed Camera", cameraController.fixedCamera);
                 cameraController.autoCameraSpeed = EditorGUILayout.Toggle("Auto camera speed", cameraController.autoCameraSpeed);
                 cameraController.stopCamera = EditorGUILayout.Toggle("Stop Camera", cameraController.stopCamera);
-                cameraController.lookAlwaysTarget = EditorGUILayout.Toggle("Look always camera", cameraController.lookAlwaysTarget);
+                cameraController.lookAlwaysTarget = EditorGUILayout.Toggle("Look always target", cameraController.lookAlwaysTarget);
                 cameraController.lerpAngle = EditorGUILayout.Toggle("Lerp Angle", cameraController.lerpAngle);
                 
             }

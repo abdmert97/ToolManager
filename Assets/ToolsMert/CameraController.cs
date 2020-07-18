@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace Tools
@@ -17,7 +19,7 @@ namespace Tools
 		public bool relativeRotation;
 		public Vector3 defaultRotation;
 
-		public Text text;
+		
 		[HideInInspector]
 		public bool cullObjectFrontofTarget;
 		[Range(0,255)][HideInInspector]
@@ -63,7 +65,7 @@ namespace Tools
 			transform.position = position + _lookDistance;
 			_lookDistance = new Vector3(0,distance*Mathf.Sin(angle*Mathf.Deg2Rad),-1*distance*Mathf.Cos(angle*Mathf.Deg2Rad));
 			_camera = Camera.main;
-			text.text = target.name;
+			
 		}
 
 		
@@ -149,10 +151,10 @@ namespace Tools
 			if (autoCameraSpeed)
 			{
 				Vector2 isVisible =	_camera.WorldToViewportPoint(target.position);
-			  
-				if (isVisible.x> 0.75f || isVisible.y > 0.75f ||isVisible.x< 0.25f || isVisible.y < 0.25f)
+				
+				if (isVisible.x > 0.75f || isVisible.y > 0.75f || isVisible.x < 0.25f || isVisible.y < 0.25f)
 				{
-					cameraSpeed += Time.deltaTime;
+					cameraSpeed += Time.deltaTime*1.5f;
 				}
 				else
 				{
@@ -165,7 +167,7 @@ namespace Tools
 			{
 				distance = distance * cameraSpeed*Time.deltaTime;
 			}
-			
+			//Debug.Log(distance.magnitude);
 			//transform.position = Vector3.Lerp(transform.position, _lastFocusPoint + _lookDistance, _time * cameraSpeed);
 			transform.position += distance;
 		}
@@ -198,17 +200,16 @@ namespace Tools
 
 		private void OnDrawGizmos()
 		{
-			Gizmos.color = Color.blue;
-
-			Gizmos.DrawSphere(_focusPoint,.1f);
-		
-			Gizmos.color = Color.red;
-
-			Gizmos.DrawSphere(_lastFocusPoint,.1f);
-
-			var position = target.position;
-			Gizmos.DrawLine(position,position+_hitNormal*5);
-
+			//Gizmos.color = Color.blue;
+//
+			//Gizmos.DrawSphere(_focusPoint,.1f);
+		//
+			//Gizmos.color = Color.red;
+//
+			//Gizmos.DrawSphere(_lastFocusPoint,.1f);
+			//var position = target.position;
+			//Gizmos.DrawLine(position,position+_hitNormal*5);
+//
 		}
 	}
 }

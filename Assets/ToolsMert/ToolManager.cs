@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
+using Tools;
 using UnityEngine;
-using Object = System.Object;
+using Coroutine = Tools.Coroutine;
 
-namespace Tools
+namespace ToolsMert
 {
     public class ToolManager : Singleton<ToolManager>
     {

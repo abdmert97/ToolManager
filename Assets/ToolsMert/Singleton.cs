@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Tools
+namespace ToolsMert
 {
     public class Singleton<T> : MonoBehaviour where T:MonoBehaviour
     {
